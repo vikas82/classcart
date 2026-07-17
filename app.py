@@ -124,6 +124,9 @@ def get_theme_css():
     .stApp { background: linear-gradient(135deg, #050505 0%, #0d0d0f 100%); }
     .block-container { padding-top: 1rem; padding-bottom: 2rem; }
     .hero-card { background: linear-gradient(135deg, #121216 0%, #09090b 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 2rem; margin-bottom: 1.2rem; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
+    .top-strip { background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 0.7rem 1rem; margin-bottom: 1rem; display:flex; justify-content:space-between; align-items:center; }
+    .brand-badge { display:flex; align-items:center; gap:0.7rem; font-weight:700; }
+    .brand-badge img { width:38px; height:38px; border-radius:12px; }
     .section-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.1rem; margin-bottom: 1rem; box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
     .product-card { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 1rem; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
     .team-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 1.3rem; text-align: center; }
@@ -210,7 +213,7 @@ def get_cart_items(cart):
 def render_header():
     st.markdown(get_theme_css(), unsafe_allow_html=True)
 
-    st.markdown("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;'><div style='font-size:1.15rem;font-weight:700;'>Class Cart</div><div class='muted'>student essentials • since 2026</div></div>", unsafe_allow_html=True)
+    st.markdown("<div class='top-strip'><div class='brand-badge'><img src='data:image/svg+xml;base64,{}' alt='Class Cart logo' /><div><div>Class Cart</div><div class='muted' style='font-size:0.78rem;font-weight:500;'>student essentials • since 2026</div></div></div><div class='muted'>smart school essentials</div></div>".format(__import__('base64').b64encode(Path(__file__).resolve().parent.joinpath('logo.svg').read_bytes()).decode()), unsafe_allow_html=True)
     nav = st.columns([1, 1, 1, 1, 1, 1, 1, 1.2])
     with nav[0]:
         if st.button("Shop", use_container_width=True):
@@ -473,6 +476,7 @@ def render_login_and_dashboard():
 
 
 def render_cart_sidebar():
+    st.sidebar.markdown("<div style='display:flex;align-items:center;gap:0.7rem;padding:0.3rem 0 0.8rem 0;'><img src='data:image/svg+xml;base64,{}' style='width:36px;height:36px;border-radius:10px;' /><div><div style='font-weight:700;'>Class Cart</div><div style='font-size:0.78rem;color:#9a9aa2;'>school essentials</div></div></div>".format(__import__('base64').b64encode(Path(__file__).resolve().parent.joinpath('logo.svg').read_bytes()).decode()), unsafe_allow_html=True)
     st.sidebar.header("Your cart")
     cart = st.session_state.setdefault("cart", {})
     if not cart:
