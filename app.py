@@ -24,9 +24,31 @@ PRODUCTS = [
 FILTERS = ["all", "stationery", "keychains", "bracelets", "combos"]
 
 ACCOUNTS = {
-    "hridhaan": {"password": "Ceo@456", "name": "Hridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, pricing, operations and company growth."},
-    "sahil": {"password": "Cmo@321", "name": "Sahil Singh", "role": "CMO", "summary": "Leads promotion, customer communication and brand strategy."},
+    "ridhaan": {"password": "123456", "name": "ridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, pricing, operations and company growth."},
+    "sahil": {"password": "123456", "name": "Sahil Singh", "role": "CMO", "summary": "Leads promotion, customer communication and brand strategy."},
 }
+
+
+def authenticate_user(username: str, password: str, accounts=None):
+    accounts = ACCOUNTS if accounts is None else accounts
+    account = accounts.get(username.strip().lower())
+    if account and account.get("password") == password:
+        return account
+    return None
+
+
+def register_user(username: str, password: str, name: str, role: str, accounts=None):
+    accounts = ACCOUNTS if accounts is None else accounts
+    normalized_username = username.strip().lower()
+    if not normalized_username or normalized_username in accounts:
+        return None
+    accounts[normalized_username] = {
+        "password": password,
+        "name": name,
+        "role": role,
+        "summary": "New team member onboarded to Class Cart.",
+    }
+    return accounts[normalized_username]
 
 
 def get_theme_css():
@@ -53,12 +75,22 @@ def initialize_session():
     st.session_state.setdefault("search_term", "")
     st.session_state.setdefault("active_category", "all")
     st.session_state.setdefault("show_login", False)
+    st.session_state.setdefault("show_signup", False)
     st.session_state.setdefault("user", None)
     st.session_state.setdefault("view", "home")
+    st.session_state.setdefault("dashboard_open", False)
+    st.session_state.setdefault("auth_page", "login")
 
 
 def set_view(view_name: str):
     st.session_state["view"] = view_name
+
+
+def open_auth_page(page_name: str):
+    st.session_state["auth_page"] = page_name
+    st.session_state["show_login"] = False
+    st.session_state["show_signup"] = False
+    set_view(page_name)
 
 
 def add_to_cart(cart, product_id, quantity=1):
@@ -112,7 +144,7 @@ def render_header():
     st.markdown(get_theme_css(), unsafe_allow_html=True)
 
     st.markdown("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;'><div style='font-size:1.15rem;font-weight:700;'>Class Cart</div><div class='muted'>student essentials • since 2026</div></div>", unsafe_allow_html=True)
-    nav = st.columns([1, 1, 1, 1.4])
+    nav = st.columns([1, 1, 1, 1, 1, 1.2])
     with nav[0]:
         if st.button("Shop", use_container_width=True):
             set_view("shop")
@@ -125,10 +157,24 @@ def render_header():
         if st.button("Team", use_container_width=True):
             set_view("team")
             st.session_state["show_login"] = True
+            st.session_state["dashboard_open"] = False
     with nav[3]:
+        if st.button("Login", use_container_width=True):
+            open_auth_page("login")
+    with nav[4]:
+        if st.button("Sign up", use_container_width=True):
+            open_auth_page("signup")
+    with nav[5]:
         if st.button(f"Cart · {sum(st.session_state['cart'].values())}", use_container_width=True):
             set_view("cart")
             st.session_state["show_login"] = False
+            st.session_state["dashboard_open"] = False
+
+
+def handle_cart_update(product_id, quantity=1):
+    current_cart = st.session_state.get("cart", {})
+    st.session_state["cart"] = add_to_cart(current_cart, product_id, quantity)
+    st.rerun()
 
 
 def render_hero():
@@ -167,7 +213,7 @@ def render_hero():
             unsafe_allow_html=True,
         )
         if st.button("Add combo", key="combo_add", use_container_width=True):
-            st.session_state["cart"] = add_to_cart(st.session_state["cart"], 14)
+            handle_cart_update(14)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -200,7 +246,7 @@ def render_catalog():
             st.write(product["desc"])
             st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹{product['price']}</strong><span class='tiny'>Add to cart</span></div>", unsafe_allow_html=True)
             if st.button("Add", key=f"add_{product['id']}", use_container_width=True):
-                st.session_state["cart"] = add_to_cart(st.session_state["cart"], product["id"])
+                handle_cart_update(product["id"])
             st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -237,6 +283,47 @@ def render_team():
             st.markdown("</div>", unsafe_allow_html=True)
 
 
+def render_auth_page(page_name: str):
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    if page_name == "signup":
+        st.markdown("### Create your account")
+        st.write("Create a new account to access the team dashboard.")
+        signup_username = st.text_input("Choose a username", key="auth_signup_username")
+        signup_password = st.text_input("Choose a password", type="password", key="auth_signup_password")
+        signup_name = st.text_input("Your name", key="auth_signup_name")
+        signup_role = st.text_input("Role", key="auth_signup_role")
+        if st.button("Create account"):
+            account = register_user(signup_username, signup_password, signup_name or "New User", signup_role or "Member")
+            if account:
+                st.session_state["user"] = account
+                st.session_state["show_signup"] = False
+                st.session_state["dashboard_open"] = True
+                set_view("dashboard")
+                st.success("Account created successfully.")
+            else:
+                st.error("That username is already taken.")
+        if st.button("Go to login"):
+            open_auth_page("login")
+    else:
+        st.markdown("### Login to Class Cart")
+        st.write("Sign in to continue to your dashboard.")
+        username = st.text_input("Username", key="auth_login_username")
+        password = st.text_input("Password", type="password", key="auth_login_password")
+        if st.button("Log in"):
+            account = authenticate_user(username, password)
+            if account:
+                st.session_state["user"] = account
+                st.session_state["show_login"] = False
+                st.session_state["dashboard_open"] = True
+                set_view("dashboard")
+                st.success(f"Welcome back, {account['name']}!")
+            else:
+                st.error("Incorrect username or password.")
+        if st.button("Create an account"):
+            open_auth_page("signup")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
 def render_login_and_dashboard():
     if st.session_state.get("show_login"):
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
@@ -244,18 +331,18 @@ def render_login_and_dashboard():
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
         if st.button("Continue"):
-            account = ACCOUNTS.get(username.strip().lower())
-            if account and account["password"] == password:
+            account = authenticate_user(username, password)
+            if account:
                 st.session_state["user"] = account
                 st.session_state["show_login"] = False
+                st.session_state["dashboard_open"] = True
                 st.success("Welcome back.")
             else:
                 st.error("Incorrect username or password.")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.session_state.get("user"):
+    if st.session_state.get("user") and st.session_state.get("dashboard_open"):
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        st.markdown("---")
         st.markdown("### Leadership dashboard")
         account = st.session_state["user"]
         st.markdown(f"**{account['name']}** · {account['role']}")
@@ -264,8 +351,12 @@ def render_login_and_dashboard():
         cols[0].metric("Total products", "14")
         cols[1].metric("Starting price", "₹5")
         cols[2].metric("Featured combo", "₹110")
+        if st.button("Back to shop"):
+            st.session_state["dashboard_open"] = False
+            set_view("home")
         if st.button("Log out"):
             st.session_state.pop("user", None)
+            st.session_state["dashboard_open"] = False
         st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -283,12 +374,14 @@ def render_cart_sidebar():
         qty_cols = st.sidebar.columns([1, 1, 1])
         with qty_cols[0]:
             if st.sidebar.button("−", key=f"dec_{product['id']}"):
-                st.session_state["cart"] = update_cart_quantity(st.session_state["cart"], product["id"], -1)
+                st.session_state["cart"] = update_cart_quantity(st.session_state.get("cart", {}), product["id"], -1)
+                st.rerun()
         with qty_cols[1]:
             st.sidebar.write(f"{product['qty']}")
         with qty_cols[2]:
             if st.sidebar.button("+", key=f"inc_{product['id']}"):
-                st.session_state["cart"] = update_cart_quantity(st.session_state["cart"], product["id"], 1)
+                st.session_state["cart"] = update_cart_quantity(st.session_state.get("cart", {}), product["id"], 1)
+                st.rerun()
 
     total = calculate_cart_total(cart)
     st.sidebar.markdown("---")
@@ -327,6 +420,10 @@ def main():
 
     if st.session_state["view"] == "cart":
         render_cart_view()
+    elif st.session_state["view"] == "dashboard" and st.session_state.get("user"):
+        render_login_and_dashboard()
+    elif st.session_state["view"] in {"login", "signup"}:
+        render_auth_page(st.session_state["view"])
     else:
         render_hero()
         render_catalog()
