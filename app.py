@@ -3,76 +3,71 @@ import streamlit as st
 st.set_page_config(page_title="Class Cart", page_icon="📚", layout="wide")
 
 PRODUCTS = [
-    {
-        "id": 1,
-        "name": "Lumen Planner",
-        "category": "Study",
-        "description": "A premium weekly planner for keeping deadlines and routines in one place.",
-        "price": 24,
-        "emoji": "🗓️",
-    },
-    {
-        "id": 2,
-        "name": "Halo Notes",
-        "category": "Study",
-        "description": "Soft-touch notebooks with thick paper for deep-focus writing sessions.",
-        "price": 16,
-        "emoji": "📝",
-    },
-    {
-        "id": 3,
-        "name": "Orbit Pen Set",
-        "category": "Stationery",
-        "description": "Minimal pens that feel smooth in hand and look great on every desk.",
-        "price": 18,
-        "emoji": "✒️",
-    },
-    {
-        "id": 4,
-        "name": "Nova Desk Mat",
-        "category": "Desk",
-        "description": "A matte desk protector that keeps your workspace calm and tidy.",
-        "price": 29,
-        "emoji": "🖥️",
-    },
-    {
-        "id": 5,
-        "name": "Pulse Tote",
-        "category": "Travel",
-        "description": "A slim tote with cable pockets and room for your daily essentials.",
-        "price": 35,
-        "emoji": "🎒",
-    },
-    {
-        "id": 6,
-        "name": "Focus Bundle",
-        "category": "Bundles",
-        "description": "Planner, notes, and pen set combined into one refined starter pack.",
-        "price": 54,
-        "emoji": "📦",
-    },
+    {"id": 1, "name": "Pen", "price": 10, "category": "stationery", "icon": "🖊️", "desc": "Smooth everyday writing pen."},
+    {"id": 2, "name": "Pencil", "price": 10, "category": "stationery", "icon": "✏️", "desc": "Useful for classwork and drawing."},
+    {"id": 3, "name": "Eraser", "price": 5, "category": "stationery", "icon": "⬜", "desc": "Clean and easy erasing."},
+    {"id": 4, "name": "Sharpener", "price": 5, "category": "stationery", "icon": "🔺", "desc": "Compact school sharpener."},
+    {"id": 5, "name": "Ruler", "price": 20, "category": "stationery", "icon": "📏", "desc": "Clear markings for neat work."},
+    {"id": 6, "name": "Highlighter", "price": 45, "category": "stationery", "icon": "🖍️", "desc": "Highlight important notes."},
+    {"id": 7, "name": "Bookmark", "price": 10, "category": "stationery", "icon": "🔖", "desc": "Mark your reading place."},
+    {"id": 8, "name": "Simple Keychain", "price": 25, "category": "keychains", "icon": "🔑", "desc": "Simple and useful design."},
+    {"id": 9, "name": "Cartoon Keychain", "price": 40, "category": "keychains", "icon": "🌟", "desc": "Fun cartoon bag accessory."},
+    {"id": 10, "name": "Anime Keychain", "price": 120, "category": "keychains", "icon": "🎨", "desc": "Premium anime-themed keychain."},
+    {"id": 11, "name": "Customised Keychain", "price": 125, "category": "keychains", "icon": "✨", "desc": "Personalised name or design."},
+    {"id": 12, "name": "Friendship Bracelet", "price": 20, "category": "bracelets", "icon": "🧵", "desc": "A small gift for friends."},
+    {"id": 13, "name": "Name Bracelet", "price": 45, "category": "bracelets", "icon": "🔤", "desc": "Bracelet personalised with a name."},
+    {"id": 14, "name": "Gift Combo", "price": 110, "category": "combos", "icon": "🎁", "desc": "Popular items in one useful combo."},
+    {"id": 15, "name": "Lumen Planner", "price": 24, "category": "stationery", "icon": "🗓️", "desc": "Premium weekly planner for students."},
+    {"id": 16, "name": "Halo Notes", "price": 16, "category": "stationery", "icon": "📝", "desc": "Soft-touch notes for focused study."},
 ]
 
-CATEGORIES = ["All", "Study", "Stationery", "Desk", "Travel", "Bundles"]
+FILTERS = ["all", "stationery", "keychains", "bracelets", "combos"]
+
+ACCOUNTS = {
+    "hridhaan": {"password": "Ceo@456", "name": "Hridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, pricing, operations and company growth."},
+    "sahil": {"password": "Cmo@321", "name": "Sahil Singh", "role": "CMO", "summary": "Leads promotion, customer communication and brand strategy."},
+}
+
+
+def initialize_session():
+    st.session_state.setdefault("cart", {})
+    st.session_state.setdefault("search_term", "")
+    st.session_state.setdefault("active_category", "all")
+    st.session_state.setdefault("show_login", False)
+    st.session_state.setdefault("user", None)
 
 
 def filter_products(search_term: str, category: str):
     search_term = search_term.lower().strip()
+    normalized_category = (category or "all").lower()
     filtered = PRODUCTS
-
-    if category != "All":
-        filtered = [product for product in filtered if product["category"] == category]
-
+    if normalized_category != "all":
+        filtered = [product for product in filtered if product["category"] == normalized_category]
     if search_term:
         filtered = [
             product
             for product in filtered
-            if search_term in product["name"].lower()
-            or search_term in product["description"].lower()
-            or search_term in product["category"].lower()
+            if search_term in product["name"].lower() or search_term in product["desc"].lower()
         ]
-
     return filtered
+
+
+def calculate_cart_total(cart):
+    total = 0
+    for product_id, quantity in cart.items():
+        product = next((item for item in PRODUCTS if item["id"] == product_id), None)
+        if product:
+            total += product["price"] * quantity
+    return total
+
+
+def get_cart_items(cart):
+    items = []
+    for product_id, quantity in cart.items():
+        product = next((item for item in PRODUCTS if item["id"] == product_id), None)
+        if product and quantity > 0:
+            items.append({**product, "qty": quantity})
+    return items
 
 
 def render_header():
@@ -80,104 +75,101 @@ def render_header():
         """
         <style>
         .block-container { padding-top: 1rem; }
-        .hero-card {
-            background: linear-gradient(135deg, #121216 0%, #09090b 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 24px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        .section-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-        }
-        .product-card {
-            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px;
-            padding: 1rem;
-            height: 100%;
-        }
+        .hero-card { background: linear-gradient(135deg, #121216 0%, #09090b 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 2rem; margin-bottom: 1.2rem; }
+        .section-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.1rem; margin-bottom: 1rem; }
+        .product-card { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 1rem; height: 100%; }
+        .muted { color: #b8b8c0; }
         .tiny { color: #9a9aa2; font-size: 0.8rem; }
-        .muted { color: #bcbcc6; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    top = st.columns([3, 1, 1, 1])
-    with top[0]:
-        st.markdown("<div style='font-size:1.15rem;font-weight:700;'>Class Cart</div>", unsafe_allow_html=True)
-    with top[1]:
-        st.markdown("[Shop](#shop)", unsafe_allow_html=True)
-    with top[2]:
-        st.markdown("[Features](#features)", unsafe_allow_html=True)
-    with top[3]:
-        st.markdown("[Team](#team)", unsafe_allow_html=True)
+    st.markdown("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;'><div style='font-size:1.15rem;font-weight:700;'>Class Cart</div><div class='muted'>student essentials • since 2026</div></div>", unsafe_allow_html=True)
+    nav = st.columns([1, 1, 1, 1.4])
+    with nav[0]:
+        if st.button("Shop", use_container_width=True):
+            st.session_state["active_category"] = "all"
+    with nav[1]:
+        if st.button("Categories", use_container_width=True):
+            st.session_state["active_category"] = "stationery"
+    with nav[2]:
+        if st.button("Team", use_container_width=True):
+            st.session_state["show_login"] = True
+    with nav[3]:
+        if st.button(f"Cart · {sum(st.session_state['cart'].values())}", use_container_width=True):
+            st.session_state["show_login"] = False
 
 
 def render_hero():
     st.markdown("<div class='hero-card'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1.2, 0.8], gap="large")
+    left, right = st.columns([1.2, 0.8], gap="large")
 
-    with col1:
-        st.caption("PREMIUM DARK STATIONERY")
-        st.markdown("<h1 style='font-size:3rem;line-height:1.05;margin:0.2rem 0 0.8rem;'>The calmest way to organize your study life.</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='muted' style='font-size:1.02rem;max-width:650px;'>Class Cart brings together planners, notebooks, and desk accessories in one refined shop built for students who value focus.</p>", unsafe_allow_html=True)
-        buttons = st.columns([0.25, 0.25])
-        with buttons[0]:
-            st.button("Start shopping", use_container_width=True)
-        with buttons[1]:
-            st.button("Explore essentials", use_container_width=True)
+    with left:
+        st.caption("STUDENT ESSENTIALS • SINCE 2026")
+        st.markdown("<h1 style='font-size:3rem;line-height:1.05;margin:0.2rem 0 0.8rem;'>Everything you need.<br><span style='color:#777780;'>Nothing you don't.</span></h1>", unsafe_allow_html=True)
+        st.markdown("<p class='muted' style='font-size:1rem;max-width:650px;'>Premium stationery, customised accessories and useful school essentials—simple, smart and student-friendly.</p>", unsafe_allow_html=True)
+        action_cols = st.columns(2)
+        with action_cols[0]:
+            if st.button("Explore products", use_container_width=True):
+                st.session_state["active_category"] = "all"
+        with action_cols[1]:
+            if st.button("Meet the team", use_container_width=True):
+                st.session_state["show_login"] = True
 
         stats = st.columns(3)
-        stats[0].metric("4.9/5", "student rated")
-        stats[1].metric("24h", "dispatch")
-        stats[2].metric("100%", "curated")
+        stats[0].metric("14", "products")
+        stats[1].metric("₹5", "starting price")
+        stats[2].metric("2026", "founded")
 
-    with col2:
+    with right:
         st.markdown(
             """
             <div class='section-card'>
-                <div style='font-size:4rem;text-align:center;'>📚</div>
-                <h3 style='margin:0.4rem 0 0.2rem;'>Focus Edition</h3>
-                <p class='muted'>An elevated starter set with planner, notes, and matte accessories.</p>
-                <div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>$54</strong><span style='background:white;color:black;border-radius:999px;padding:0.4rem 0.7rem;font-weight:700;'>Add</span></div>
+                <div style='font-size:4rem;text-align:center;'>🎁</div>
+                <h3 style='margin:0.4rem 0 0.2rem;'>Student Gift Combo</h3>
+                <p class='muted'>A useful mix of popular Class Cart products.</p>
+                <div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹110</strong><span style='background:white;color:black;border-radius:999px;padding:0.4rem 0.7rem;font-weight:700;'>Add</span></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        if st.button("Add combo", key="combo_add", use_container_width=True):
+            cart = st.session_state.setdefault("cart", {})
+            cart[14] = cart.get(14, 0) + 1
+            st.session_state["cart"] = cart
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_catalog():
     st.markdown("<a id='shop'></a>", unsafe_allow_html=True)
-    st.markdown("<h2 style='margin-bottom:0.3rem;'>Shop essentials</h2>", unsafe_allow_html=True)
-    st.markdown("<p class='muted'>Search by product or browse the categories below.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-bottom:0.3rem;'>Shop Class Cart</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='muted'>Search, filter and add your favourite products to the cart.</p>", unsafe_allow_html=True)
 
     search_col, filter_col = st.columns([2, 1])
     with search_col:
-        search_term = st.text_input("Search", placeholder="Try planner, desk, or tote")
+        st.session_state["search_term"] = st.text_input("Search products", value=st.session_state["search_term"], placeholder="Search products...")
     with filter_col:
-        category = st.selectbox("Category", CATEGORIES)
+        st.session_state["active_category"] = st.selectbox("Category", FILTERS, index=FILTERS.index(st.session_state["active_category"]))
 
-    filtered_products = filter_products(search_term, category)
+    filtered_products = filter_products(st.session_state["search_term"], st.session_state["active_category"])
 
-    cols = st.columns(3)
+    if not filtered_products:
+        st.info("No products found.")
+        return
+
+    cols = st.columns(4)
     for index, product in enumerate(filtered_products):
-        column = cols[index % 3]
+        column = cols[index % 4]
         with column:
             st.markdown("<div class='product-card'>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:3rem;text-align:center;'>{product['emoji']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:3rem;text-align:center;'>{product['icon']}</div>", unsafe_allow_html=True)
             st.markdown(f"<h4 style='margin:0.4rem 0 0.2rem;'>{product['name']}</h4>", unsafe_allow_html=True)
-            st.caption(product["category"])
-            st.write(product["description"])
-            st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>${product['price']}</strong><span class='tiny'>Curated pick</span></div>", unsafe_allow_html=True)
-            if st.button("Add to cart", key=f"add_{product['id']}", use_container_width=True):
+            st.caption(product["category"].upper())
+            st.write(product["desc"])
+            st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹{product['price']}</strong><span class='tiny'>Add to cart</span></div>", unsafe_allow_html=True)
+            if st.button("Add", key=f"add_{product['id']}", use_container_width=True):
                 cart = st.session_state.setdefault("cart", {})
                 cart[product["id"]] = cart.get(product["id"], 0) + 1
                 st.session_state["cart"] = cart
@@ -185,72 +177,106 @@ def render_catalog():
 
 
 def render_features():
-    st.markdown("<a id='features'></a>", unsafe_allow_html=True)
-    st.markdown("<h2 style='margin-top:2rem;'>Why students choose Class Cart</h2>", unsafe_allow_html=True)
-
+    st.markdown("<a id='categories'></a>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-top:2rem;'>Designed for everyday school life.</h2>", unsafe_allow_html=True)
+    st.markdown("<p class='muted'>Simple prices, useful products and personalised options—all in one student-run store.</p>", unsafe_allow_html=True)
     feature_cols = st.columns(3)
-    feature_cards = [
-        ("🧠", "Focus-first design", "Every product is selected to keep your desk calm, useful, and distraction-free."),
-        ("⚡", "Fast delivery", "Orders are prepared quickly so you can get back to your routine without delay."),
-        ("🌙", "Minimal styling", "Dark materials and soft details make your workspace feel polished and intentional."),
-    ]
-
-    for col, (emoji, title, description) in zip(feature_cols, feature_cards):
+    for col, (title, desc) in zip(feature_cols, [("Student-friendly prices", "Affordable products starting from just ₹5."), ("Customised options", "Name bracelets and keychains made personally for you."), ("Simple ordering", "Add items to your cart and prepare your order quickly.")]):
         with col:
             st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size:2rem;'>{emoji}</div>", unsafe_allow_html=True)
             st.markdown(f"<h4 style='margin:0.2rem 0;'>{title}</h4>", unsafe_allow_html=True)
-            st.write(description)
+            st.write(desc)
             st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_team():
     st.markdown("<a id='team'></a>", unsafe_allow_html=True)
-    st.markdown("<h2 style='margin-top:2rem;'>Meet the team</h2>", unsafe_allow_html=True)
-
+    st.markdown("<h2 style='margin-top:2.5rem;'>The team behind Class Cart</h2>", unsafe_allow_html=True)
     team = [
-        ("A", "Founder", "Ari builds the collection around calm routines and useful design."),
-        ("M", "Product Lead", "Mina translates student needs into polished desk and study essentials."),
+        ("HA", "CHIEF EXECUTIVE OFFICER", "Hridhaan Aggrawal", "Leads business planning, pricing, operations and company growth."),
+        ("SS", "CHIEF MARKETING OFFICER", "Sahil Singh", "Leads promotion, customer communication and brand strategy."),
+        ("VC", "HEAD OF INVENTORY", "Vivaan Chawla", "Manages inventory and stock."),
+        ("IA", "INVENTORY ASSISTANT", "To Be Assigned", "Supports inventory operations."),
     ]
-
     cols = st.columns(2)
-    for col, (avatar, role, bio) in zip(cols, team):
+    for col, (avatar, role, name, bio) in zip(cols, team):
         with col:
             st.markdown("<div class='section-card' style='text-align:center;'>", unsafe_allow_html=True)
             st.markdown(f"<div style='width:72px;height:72px;border-radius:50%;background:white;color:black;display:grid;place-items:center;margin:auto;font-size:1.3rem;font-weight:700;'>{avatar}</div>", unsafe_allow_html=True)
-            st.markdown(f"<h4 style='margin:0.4rem 0 0.2rem;'>{role}</h4>", unsafe_allow_html=True)
+            st.markdown(f"<p class='tiny' style='margin:0.4rem 0 0.1rem;'>{role}</p>", unsafe_allow_html=True)
+            st.markdown(f"<h4 style='margin:0.2rem 0;'>{name}</h4>", unsafe_allow_html=True)
             st.write(bio)
             st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_login_and_dashboard():
+    if st.session_state.get("show_login"):
+        st.markdown("### Team login")
+        username = st.text_input("Username", key="login_username")
+        password = st.text_input("Password", type="password", key="login_password")
+        if st.button("Continue"):
+            account = ACCOUNTS.get(username.strip().lower())
+            if account and account["password"] == password:
+                st.session_state["user"] = account
+                st.session_state["show_login"] = False
+                st.success("Welcome back.")
+            else:
+                st.error("Incorrect username or password.")
+
+    if st.session_state.get("user"):
+        st.markdown("---")
+        st.markdown("### Leadership dashboard")
+        account = st.session_state["user"]
+        st.markdown(f"**{account['name']}** · {account['role']}")
+        st.write(account["summary"])
+        cols = st.columns(3)
+        cols[0].metric("Total products", "14")
+        cols[1].metric("Starting price", "₹5")
+        cols[2].metric("Featured combo", "₹110")
+        if st.button("Log out"):
+            st.session_state.pop("user", None)
 
 
 def render_cart_sidebar():
     st.sidebar.header("Your cart")
     cart = st.session_state.setdefault("cart", {})
-
     if not cart:
         st.sidebar.write("Your cart is empty. Add a few essentials to build your setup.")
         return
 
-    total = 0
-    for product_id, quantity in list(cart.items()):
-        product = next(item for item in PRODUCTS if item["id"] == product_id)
-        line_total = product["price"] * quantity
-        total += line_total
-        st.sidebar.markdown(f"**{product['name']}** x{quantity}")
-        st.sidebar.write(f"${line_total}")
+    items = get_cart_items(cart)
+    for product in items:
+        st.sidebar.markdown(f"**{product['name']}**")
+        st.sidebar.write(f"₹{product['price']} each")
+        qty_cols = st.sidebar.columns([1, 1, 1])
+        with qty_cols[0]:
+            if st.sidebar.button("−", key=f"dec_{product['id']}"):
+                cart[product["id"]] = max(0, cart.get(product["id"], 0) - 1)
+                if cart[product["id"]] == 0:
+                    cart.pop(product["id"], None)
+                st.session_state["cart"] = cart
+        with qty_cols[1]:
+            st.sidebar.write(f"{product['qty']}")
+        with qty_cols[2]:
+            if st.sidebar.button("+", key=f"inc_{product['id']}"):
+                cart[product["id"]] = cart.get(product["id"], 0) + 1
+                st.session_state["cart"] = cart
 
+    total = calculate_cart_total(cart)
     st.sidebar.markdown("---")
-    st.sidebar.markdown(f"### Total: ${total}")
-    if st.sidebar.button("Checkout", use_container_width=True):
-        st.sidebar.success("Checkout is ready for the next step.")
+    st.sidebar.markdown(f"### Total: ₹{total}")
+    if st.sidebar.button("Prepare order"):
+        st.sidebar.success("Order prepared. Connect WhatsApp or a secure backend for real orders.")
 
 
 def main():
+    initialize_session()
     render_header()
     render_hero()
     render_catalog()
     render_features()
     render_team()
+    render_login_and_dashboard()
     render_cart_sidebar()
 
 
