@@ -46,6 +46,12 @@ def test_register_user_creates_account():
     assert users["newuser"]["name"] == "New User"
 
 
+def test_database_authentication_uses_sqlite():
+    account = app.authenticate_user("ridhaan", "123456")
+    assert account is not None
+    assert account["name"] == "ridhaan Aggrawal"
+
+
 def test_shared_theme_css_contains_consistent_ui_classes():
     css = app.get_theme_css()
     assert ".hero-card" in css

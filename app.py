@@ -1,6 +1,12 @@
+import os
+import sqlite3
+from pathlib import Path
+
 import streamlit as st
 
 st.set_page_config(page_title="Class Cart", page_icon="📚", layout="wide")
+
+DB_PATH = Path(__file__).resolve().parent / "classcart.db"
 
 PRODUCTS = [
     {"id": 1, "name": "Pen", "price": 10, "category": "stationery", "icon": "🖊️", "desc": "Smooth everyday writing pen."},
@@ -29,7 +35,45 @@ ACCOUNTS = {
 }
 
 
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    conn.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, summary TEXT NOT NULL)")
+    return conn
+
+
+def seed_default_users():
+    conn = get_db_connection()
+    try:
+        for username, account in ACCOUNTS.items():
+            conn.execute(
+                "INSERT OR IGNORE INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?)",
+                (username, account["password"], account["name"], account["role"], account["summary"]),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+seed_default_users()
+
+
 def authenticate_user(username: str, password: str, accounts=None):
+    if accounts is None:
+        conn = get_db_connection()
+        try:
+            row = conn.execute("SELECT username, password, name, role, summary FROM users WHERE username = ?", (username.strip().lower(),)).fetchone()
+            if row and row["password"] == password:
+                return {
+                    "username": row["username"],
+                    "password": row["password"],
+                    "name": row["name"],
+                    "role": row["role"],
+                    "summary": row["summary"],
+                }
+            return None
+        finally:
+            conn.close()
     accounts = ACCOUNTS if accounts is None else accounts
     account = accounts.get(username.strip().lower())
     if account and account.get("password") == password:
@@ -38,6 +82,29 @@ def authenticate_user(username: str, password: str, accounts=None):
 
 
 def register_user(username: str, password: str, name: str, role: str, accounts=None):
+    if accounts is None:
+        normalized_username = username.strip().lower()
+        if not normalized_username:
+            return None
+        conn = get_db_connection()
+        try:
+            existing = conn.execute("SELECT 1 FROM users WHERE username = ?", (normalized_username,)).fetchone()
+            if existing:
+                return None
+            conn.execute(
+                "INSERT INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?)",
+                (normalized_username, password, name or "New User", role or "Member", "New team member onboarded to Class Cart."),
+            )
+            conn.commit()
+            return {
+                "username": normalized_username,
+                "password": password,
+                "name": name or "New User",
+                "role": role or "Member",
+                "summary": "New team member onboarded to Class Cart.",
+            }
+        finally:
+            conn.close()
     accounts = ACCOUNTS if accounts is None else accounts
     normalized_username = username.strip().lower()
     if not normalized_username or normalized_username in accounts:
