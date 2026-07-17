@@ -144,7 +144,7 @@ def render_header():
     st.markdown(get_theme_css(), unsafe_allow_html=True)
 
     st.markdown("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;'><div style='font-size:1.15rem;font-weight:700;'>Class Cart</div><div class='muted'>student essentials • since 2026</div></div>", unsafe_allow_html=True)
-    nav = st.columns([1, 1, 1, 1, 1, 1.2])
+    nav = st.columns([1, 1, 1, 1, 1, 1, 1, 1.2])
     with nav[0]:
         if st.button("Shop", use_container_width=True):
             set_view("shop")
@@ -159,12 +159,20 @@ def render_header():
             st.session_state["show_login"] = True
             st.session_state["dashboard_open"] = False
     with nav[3]:
+        if st.button("Team Login", use_container_width=True):
+            set_view("team_login")
+            st.session_state["dashboard_open"] = False
+    with nav[4]:
+        if st.button("Dashboard", use_container_width=True):
+            set_view("dashboard")
+            st.session_state["show_login"] = False
+    with nav[5]:
         if st.button("Login", use_container_width=True):
             open_auth_page("login")
-    with nav[4]:
+    with nav[6]:
         if st.button("Sign up", use_container_width=True):
             open_auth_page("signup")
-    with nav[5]:
+    with nav[7]:
         if st.button(f"Cart · {sum(st.session_state['cart'].values())}", use_container_width=True):
             set_view("cart")
             st.session_state["show_login"] = False
@@ -324,40 +332,77 @@ def render_auth_page(page_name: str):
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-def render_login_and_dashboard():
-    if st.session_state.get("show_login"):
-        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        st.markdown("### Team login")
-        username = st.text_input("Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
-        if st.button("Continue"):
-            account = authenticate_user(username, password)
-            if account:
-                st.session_state["user"] = account
-                st.session_state["show_login"] = False
-                st.session_state["dashboard_open"] = True
-                st.success("Welcome back.")
-            else:
-                st.error("Incorrect username or password.")
-        st.markdown("</div>", unsafe_allow_html=True)
+def render_team_login_page():
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown("### Team login")
+    st.write("Access the leadership dashboard from this dedicated page.")
+    username = st.text_input("Username", key="team_login_username")
+    password = st.text_input("Password", type="password", key="team_login_password")
+    if st.button("Continue"):
+        account = authenticate_user(username, password)
+        if account:
+            st.session_state["user"] = account
+            st.session_state["show_login"] = False
+            st.session_state["dashboard_open"] = True
+            set_view("dashboard")
+            st.success("Welcome back.")
+        else:
+            st.error("Incorrect username or password.")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    if st.session_state.get("user") and st.session_state.get("dashboard_open"):
+
+def render_leadership_dashboard_page():
+    if not st.session_state.get("user"):
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
         st.markdown("### Leadership dashboard")
-        account = st.session_state["user"]
-        st.markdown(f"**{account['name']}** · {account['role']}")
-        st.write(account["summary"])
-        cols = st.columns(3)
-        cols[0].metric("Total products", "14")
-        cols[1].metric("Starting price", "₹5")
-        cols[2].metric("Featured combo", "₹110")
+        st.write("Please sign in from the Team Login page to access the leadership dashboard.")
+        if st.button("Go to Team Login"):
+            set_view("team_login")
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown("### Leadership dashboard")
+    account = st.session_state["user"]
+    st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;'><div><strong>{account['name']}</strong><div class='muted'>{account['role']}</div></div><span class='pill'>Active</span></div>", unsafe_allow_html=True)
+    st.write(account["summary"])
+
+    summary_cols = st.columns(4)
+    summary_cols[0].metric("Products", "16")
+    summary_cols[1].metric("Starting price", "₹5")
+    summary_cols[2].metric("Best combo", "₹110")
+    summary_cols[3].metric("Orders ready", "3")
+
+    action_cols = st.columns(2)
+    with action_cols[0]:
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Store overview")
+        st.write("Monitor the product range, pricing and featured bundles in one place.")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with action_cols[1]:
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Team operations")
+        st.write("Keep the team login, onboarding and dashboard access organised for the store.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    button_cols = st.columns(2)
+    with button_cols[0]:
         if st.button("Back to shop"):
             st.session_state["dashboard_open"] = False
             set_view("home")
+    with button_cols[1]:
         if st.button("Log out"):
             st.session_state.pop("user", None)
             st.session_state["dashboard_open"] = False
-        st.markdown("</div>", unsafe_allow_html=True)
+            set_view("team_login")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_login_and_dashboard():
+    if st.session_state["view"] == "dashboard":
+        render_leadership_dashboard_page()
+    else:
+        render_team_login_page()
 
 
 def render_cart_sidebar():
@@ -420,7 +465,9 @@ def main():
 
     if st.session_state["view"] == "cart":
         render_cart_view()
-    elif st.session_state["view"] == "dashboard" and st.session_state.get("user"):
+    elif st.session_state["view"] == "dashboard":
+        render_login_and_dashboard()
+    elif st.session_state["view"] == "team_login":
         render_login_and_dashboard()
     elif st.session_state["view"] in {"login", "signup"}:
         render_auth_page(st.session_state["view"])
