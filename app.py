@@ -29,12 +29,50 @@ ACCOUNTS = {
 }
 
 
+def get_theme_css():
+    return """
+    <style>
+    .stApp { background: linear-gradient(135deg, #050505 0%, #0d0d0f 100%); }
+    .block-container { padding-top: 1rem; padding-bottom: 2rem; }
+    .hero-card { background: linear-gradient(135deg, #121216 0%, #09090b 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 2rem; margin-bottom: 1.2rem; box-shadow: 0 24px 64px rgba(0,0,0,0.35); }
+    .section-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.1rem; margin-bottom: 1rem; box-shadow: 0 12px 32px rgba(0,0,0,0.2); }
+    .product-card { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 1rem; height: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .team-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 1.3rem; text-align: center; }
+    .muted { color: #b8b8c0; }
+    .tiny { color: #9a9aa2; font-size: 0.8rem; }
+    .pill { background: white; color: black; border-radius: 999px; padding: 0.4rem 0.7rem; font-weight: 700; }
+    .stButton > button { border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.04); color: white; }
+    .stButton > button:hover { border-color: rgba(255,255,255,0.26); }
+    [data-testid="stSidebar"] { background: #050505; border-left: 1px solid rgba(255,255,255,0.08); }
+    </style>
+    """
+
+
 def initialize_session():
     st.session_state.setdefault("cart", {})
     st.session_state.setdefault("search_term", "")
     st.session_state.setdefault("active_category", "all")
     st.session_state.setdefault("show_login", False)
     st.session_state.setdefault("user", None)
+    st.session_state.setdefault("view", "home")
+
+
+def set_view(view_name: str):
+    st.session_state["view"] = view_name
+
+
+def add_to_cart(cart, product_id, quantity=1):
+    new_cart = dict(cart)
+    new_cart[product_id] = new_cart.get(product_id, 0) + quantity
+    return new_cart
+
+
+def update_cart_quantity(cart, product_id, delta):
+    new_cart = dict(cart)
+    new_cart[product_id] = new_cart.get(product_id, 0) + delta
+    if new_cart.get(product_id, 0) <= 0:
+        new_cart.pop(product_id, None)
+    return new_cart
 
 
 def filter_products(search_term: str, category: str):
@@ -71,33 +109,25 @@ def get_cart_items(cart):
 
 
 def render_header():
-    st.markdown(
-        """
-        <style>
-        .block-container { padding-top: 1rem; }
-        .hero-card { background: linear-gradient(135deg, #121216 0%, #09090b 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 2rem; margin-bottom: 1.2rem; }
-        .section-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 1.1rem; margin-bottom: 1rem; }
-        .product-card { background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 1rem; height: 100%; }
-        .muted { color: #b8b8c0; }
-        .tiny { color: #9a9aa2; font-size: 0.8rem; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.markdown(get_theme_css(), unsafe_allow_html=True)
 
     st.markdown("<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;'><div style='font-size:1.15rem;font-weight:700;'>Class Cart</div><div class='muted'>student essentials • since 2026</div></div>", unsafe_allow_html=True)
     nav = st.columns([1, 1, 1, 1.4])
     with nav[0]:
         if st.button("Shop", use_container_width=True):
+            set_view("shop")
             st.session_state["active_category"] = "all"
     with nav[1]:
         if st.button("Categories", use_container_width=True):
+            set_view("shop")
             st.session_state["active_category"] = "stationery"
     with nav[2]:
         if st.button("Team", use_container_width=True):
+            set_view("team")
             st.session_state["show_login"] = True
     with nav[3]:
         if st.button(f"Cart · {sum(st.session_state['cart'].values())}", use_container_width=True):
+            set_view("cart")
             st.session_state["show_login"] = False
 
 
@@ -112,9 +142,11 @@ def render_hero():
         action_cols = st.columns(2)
         with action_cols[0]:
             if st.button("Explore products", use_container_width=True):
+                set_view("shop")
                 st.session_state["active_category"] = "all"
         with action_cols[1]:
             if st.button("Meet the team", use_container_width=True):
+                set_view("team")
                 st.session_state["show_login"] = True
 
         stats = st.columns(3)
@@ -129,15 +161,13 @@ def render_hero():
                 <div style='font-size:4rem;text-align:center;'>🎁</div>
                 <h3 style='margin:0.4rem 0 0.2rem;'>Student Gift Combo</h3>
                 <p class='muted'>A useful mix of popular Class Cart products.</p>
-                <div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹110</strong><span style='background:white;color:black;border-radius:999px;padding:0.4rem 0.7rem;font-weight:700;'>Add</span></div>
+                <div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹110</strong><span class='pill'>Add</span></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
         if st.button("Add combo", key="combo_add", use_container_width=True):
-            cart = st.session_state.setdefault("cart", {})
-            cart[14] = cart.get(14, 0) + 1
-            st.session_state["cart"] = cart
+            st.session_state["cart"] = add_to_cart(st.session_state["cart"], 14)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -170,9 +200,7 @@ def render_catalog():
             st.write(product["desc"])
             st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹{product['price']}</strong><span class='tiny'>Add to cart</span></div>", unsafe_allow_html=True)
             if st.button("Add", key=f"add_{product['id']}", use_container_width=True):
-                cart = st.session_state.setdefault("cart", {})
-                cart[product["id"]] = cart.get(product["id"], 0) + 1
-                st.session_state["cart"] = cart
+                st.session_state["cart"] = add_to_cart(st.session_state["cart"], product["id"])
             st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -201,7 +229,7 @@ def render_team():
     cols = st.columns(2)
     for col, (avatar, role, name, bio) in zip(cols, team):
         with col:
-            st.markdown("<div class='section-card' style='text-align:center;'>", unsafe_allow_html=True)
+            st.markdown("<div class='team-card'>", unsafe_allow_html=True)
             st.markdown(f"<div style='width:72px;height:72px;border-radius:50%;background:white;color:black;display:grid;place-items:center;margin:auto;font-size:1.3rem;font-weight:700;'>{avatar}</div>", unsafe_allow_html=True)
             st.markdown(f"<p class='tiny' style='margin:0.4rem 0 0.1rem;'>{role}</p>", unsafe_allow_html=True)
             st.markdown(f"<h4 style='margin:0.2rem 0;'>{name}</h4>", unsafe_allow_html=True)
@@ -211,6 +239,7 @@ def render_team():
 
 def render_login_and_dashboard():
     if st.session_state.get("show_login"):
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
         st.markdown("### Team login")
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password", type="password", key="login_password")
@@ -222,8 +251,10 @@ def render_login_and_dashboard():
                 st.success("Welcome back.")
             else:
                 st.error("Incorrect username or password.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     if st.session_state.get("user"):
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
         st.markdown("---")
         st.markdown("### Leadership dashboard")
         account = st.session_state["user"]
@@ -235,6 +266,7 @@ def render_login_and_dashboard():
         cols[2].metric("Featured combo", "₹110")
         if st.button("Log out"):
             st.session_state.pop("user", None)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_cart_sidebar():
@@ -251,16 +283,12 @@ def render_cart_sidebar():
         qty_cols = st.sidebar.columns([1, 1, 1])
         with qty_cols[0]:
             if st.sidebar.button("−", key=f"dec_{product['id']}"):
-                cart[product["id"]] = max(0, cart.get(product["id"], 0) - 1)
-                if cart[product["id"]] == 0:
-                    cart.pop(product["id"], None)
-                st.session_state["cart"] = cart
+                st.session_state["cart"] = update_cart_quantity(st.session_state["cart"], product["id"], -1)
         with qty_cols[1]:
             st.sidebar.write(f"{product['qty']}")
         with qty_cols[2]:
             if st.sidebar.button("+", key=f"inc_{product['id']}"):
-                cart[product["id"]] = cart.get(product["id"], 0) + 1
-                st.session_state["cart"] = cart
+                st.session_state["cart"] = update_cart_quantity(st.session_state["cart"], product["id"], 1)
 
     total = calculate_cart_total(cart)
     st.sidebar.markdown("---")
@@ -269,14 +297,43 @@ def render_cart_sidebar():
         st.sidebar.success("Order prepared. Connect WhatsApp or a secure backend for real orders.")
 
 
+def render_cart_view():
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.header("Your cart")
+    cart = st.session_state.get("cart", {})
+    if not cart:
+        st.info("Your cart is empty. Add a few essentials to build your setup.")
+        return
+
+    items = get_cart_items(cart)
+    for product in items:
+        cols = st.columns([2, 1, 1])
+        with cols[0]:
+            st.write(f"**{product['name']}**")
+        with cols[1]:
+            st.write(f"₹{product['price']} each")
+        with cols[2]:
+            st.write(f"Qty: {product['qty']}")
+
+    total = calculate_cart_total(cart)
+    st.markdown("---")
+    st.subheader(f"Total: ₹{total}")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
 def main():
     initialize_session()
     render_header()
-    render_hero()
-    render_catalog()
-    render_features()
-    render_team()
-    render_login_and_dashboard()
+
+    if st.session_state["view"] == "cart":
+        render_cart_view()
+    else:
+        render_hero()
+        render_catalog()
+        render_features()
+        render_team()
+        render_login_and_dashboard()
+
     render_cart_sidebar()
 
 

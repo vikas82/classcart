@@ -24,3 +24,11 @@ def test_filter_products_search():
 def test_cart_total_calculation():
     cart = {1: 2, 2: 1}
     assert app.calculate_cart_total(cart) == 30
+
+
+def test_shared_theme_css_contains_consistent_ui_classes():
+    css = app.get_theme_css()
+    assert ".hero-card" in css
+    assert ".section-card" in css
+    assert ".product-card" in css
+    assert ".team-card" in css
