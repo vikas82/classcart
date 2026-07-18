@@ -329,6 +329,22 @@ def calculate_cart_total(cart):
     return total
 
 
+def place_order(cart, payment_method="cash on delivery"):
+    items = get_cart_items(cart)
+    total = calculate_cart_total(cart)
+    item_count = sum(item["qty"] for item in items)
+    normalized_method = (payment_method or "").strip().lower()
+    if normalized_method not in {"cash on delivery", "online payment"}:
+        normalized_method = "cash on delivery"
+    return {
+        "status": "success",
+        "payment_method": normalized_method,
+        "item_count": item_count,
+        "total": total,
+        "items": items,
+    }
+
+
 def get_cart_items(cart):
     items = []
     for product_id, quantity in cart.items():
@@ -726,6 +742,22 @@ def render_cart_view():
     total = calculate_cart_total(cart)
     st.markdown("---")
     st.subheader(f"Total: ₹{total}")
+
+    payment_method = st.radio(
+        "Choose payment method",
+        ["Cash on delivery", "Online payment"],
+        horizontal=True,
+        key="payment_method",
+    )
+
+    if st.button("Buy now"):
+        order = place_order(cart, payment_method=payment_method.lower())
+        st.success(f"Order placed successfully via {order['payment_method']}.")
+        st.write(f"Items: {order['item_count']}")
+        st.write(f"Total: ₹{order['total']}")
+        st.session_state["cart"] = {}
+        st.rerun()
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 

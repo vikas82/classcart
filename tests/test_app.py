@@ -145,6 +145,16 @@ def test_can_mark_attendance_for_normalized_leadership_roles():
     assert app.can_mark_attendance_for_role("Sales") is False
 
 
+def test_place_order_returns_cash_on_delivery_checkout_details():
+    cart = {1: 2, 2: 1}
+    order = app.place_order(cart, payment_method="cash on delivery")
+
+    assert order["status"] == "success"
+    assert order["payment_method"] == "cash on delivery"
+    assert order["item_count"] == 3
+    assert order["total"] == 30
+
+
 def test_shared_theme_css_contains_consistent_ui_classes():
     css = app.get_theme_css()
     assert ".hero-card" in css
