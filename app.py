@@ -446,8 +446,10 @@ def render_auth_page(page_name: str):
                 st.session_state["user"] = account
                 st.session_state["show_signup"] = False
                 st.session_state["dashboard_open"] = True
-                set_view("dashboard")
+                st.session_state["view"] = "dashboard"
+                st.session_state["auth_page"] = "login"
                 st.success("Account created successfully.")
+                st.rerun()
             else:
                 st.error("That username is already taken.")
         if st.button("Go to login"):
@@ -463,8 +465,10 @@ def render_auth_page(page_name: str):
                 st.session_state["user"] = account
                 st.session_state["show_login"] = False
                 st.session_state["dashboard_open"] = True
-                set_view("dashboard")
+                st.session_state["view"] = "dashboard"
+                st.session_state["auth_page"] = "login"
                 st.success(f"Welcome back, {account['name']}!")
+                st.rerun()
             else:
                 st.error("Incorrect username or password.")
         if st.button("Create an account"):
@@ -484,8 +488,10 @@ def render_team_login_page():
             st.session_state["user"] = account
             st.session_state["show_login"] = False
             st.session_state["dashboard_open"] = True
-            set_view("dashboard")
+            st.session_state["view"] = "dashboard"
+            st.session_state["auth_page"] = "login"
             st.success("Welcome back.")
+            st.rerun()
         else:
             st.error("Incorrect username or password.")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -633,20 +639,21 @@ def main():
     initialize_session()
     render_header()
 
-    if st.session_state["view"] == "cart":
+    view_name = st.session_state.get("view", "home")
+    if view_name == "cart":
         render_cart_view()
-    elif st.session_state["view"] == "dashboard":
-        render_login_and_dashboard()
-    elif st.session_state["view"] == "team_login":
-        render_login_and_dashboard()
-    elif st.session_state["view"] in {"login", "signup"}:
-        render_auth_page(st.session_state["view"])
+    elif view_name == "dashboard":
+        render_leadership_dashboard_page()
+    elif view_name == "team_login":
+        render_team_login_page()
+    elif view_name in {"login", "signup"}:
+        render_auth_page(view_name)
     else:
         render_hero()
         render_catalog()
         render_features()
         render_team()
-        render_login_and_dashboard()
+        render_team_login_page()
 
     render_cart_sidebar()
 
