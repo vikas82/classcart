@@ -331,6 +331,18 @@ def filter_products(search_term: str, category: str):
     return filtered
 
 
+def get_featured_pen_options():
+    pen_categories = [
+        {"name": "V7", "category": "v7", "price": 35, "desc": "Classic everyday writing comfort."},
+        {"name": "Pilot V7", "category": "pilot", "price": 32, "desc": "Smooth and premium feel."},
+        {"name": "Frixion", "category": "frixon", "price": 40, "desc": "Erasable and convenient."},
+        {"name": "Flair", "category": "flair", "price": 45, "desc": "Bold colors and vibrant notes."},
+        {"name": "Move", "category": "move", "price": 30, "desc": "Lightweight and easy to carry."},
+        {"name": "Gel Pen", "category": "gel", "price": 28, "desc": "Clean and polished handwriting."},
+    ]
+    return pen_categories
+
+
 def calculate_cart_total(cart):
     total = 0
     for product_id, quantity in cart.items():
@@ -489,6 +501,20 @@ def render_features():
     st.markdown("<a id='categories'></a>", unsafe_allow_html=True)
     st.markdown("<h2 style='margin-top:2rem;'>Designed for everyday school life.</h2>", unsafe_allow_html=True)
     st.markdown("<p class='muted'>Simple prices, useful products and personalised options—all in one student-run store.</p>", unsafe_allow_html=True)
+
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin-top:0;'>Choose your pen category</h3>", unsafe_allow_html=True)
+    st.markdown("<p class='muted'>Pick a pen style and see the different price for each category.</p>", unsafe_allow_html=True)
+
+    pen_options = get_featured_pen_options()
+    for option in pen_options:
+        st.markdown(
+            f"<div style='display:flex;justify-content:space-between;align-items:center;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.08);'>"
+            f"<div><strong>{option['name']}</strong><div class='tiny'>{option['desc']}</div></div>"
+            f"<div style='text-align:right;'><div class='pill'>₹{option['price']}</div><div class='tiny'>{option['category']}</div></div></div>",
+            unsafe_allow_html=True,
+        )
+
     feature_cols = st.columns(3)
     for col, (title, desc) in zip(feature_cols, [("Student-friendly prices", "Affordable products starting from just ₹5."), ("Customised options", "Name bracelets and keychains made personally for you."), ("Simple ordering", "Add items to your cart and prepare your order quickly.")]):
         with col:
@@ -496,6 +522,8 @@ def render_features():
             st.markdown(f"<h4 style='margin:0.2rem 0;'>{title}</h4>", unsafe_allow_html=True)
             st.write(desc)
             st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_team():

@@ -33,6 +33,13 @@ def test_pen_variants_are_available_in_catalog_filters():
     assert any(product["name"] == "Pilot V7" for product in pilot_results)
 
 
+def test_featured_pen_options_include_price_and_category_details():
+    options = app.get_featured_pen_options()
+    assert len(options) >= 5
+    assert any(option["category"] == "pilot" for option in options)
+    assert any(option["price"] == 40 for option in options)
+
+
 def test_cart_total_calculation():
     cart = {1: 2, 2: 1}
     assert app.calculate_cart_total(cart) == 30
