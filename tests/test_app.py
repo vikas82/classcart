@@ -9,13 +9,13 @@ import app
 
 def test_products_available():
     assert len(app.PRODUCTS) >= 4
-    assert any(product["name"] == "Lumen Planner" for product in app.PRODUCTS)
+    assert any(product["name"] == "Back-to-School Combo" for product in app.PRODUCTS)
 
 
 def test_filter_products_search():
-    results = app.filter_products("planner", "All")
+    results = app.filter_products("combo", "All")
     assert len(results) >= 1
-    assert any(product["name"] == "Lumen Planner" for product in results)
+    assert any(product["name"] == "Back-to-School Combo" for product in results)
 
     study_results = app.filter_products("", "stationery")
     assert len(study_results) >= 2
@@ -62,10 +62,20 @@ def test_authenticate_user_normalizes_username_and_returns_consistent_payload():
     assert account["name"] == "Demo User"
 
 
+def test_role_dashboard_config_contains_role_specific_sections():
+    ceo_config = app.get_role_dashboard_config("CEO")
+    inventory_config = app.get_role_dashboard_config("Head of Inventory")
+
+    assert ceo_config["icon"] == "👑"
+    assert "Attendance" in ceo_config["cards"]
+    assert inventory_config["icon"] == "📦"
+    assert "Inventory rating" in inventory_config["cards"]
+
+
 def test_database_authentication_uses_sqlite():
-    account = app.authenticate_user("ridhaan", "123456")
+    account = app.authenticate_user("hridhaan", "ceo@cc4007")
     assert account is not None
-    assert account["name"] == "ridhaan Aggrawal"
+    assert account["name"] == "Hridhaan Aggrawal"
 
 
 def test_shared_theme_css_contains_consistent_ui_classes():

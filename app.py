@@ -22,16 +22,24 @@ PRODUCTS = [
     {"id": 11, "name": "Customised Keychain", "price": 125, "category": "keychains", "icon": "✨", "desc": "Personalised name or design."},
     {"id": 12, "name": "Friendship Bracelet", "price": 20, "category": "bracelets", "icon": "🧵", "desc": "A small gift for friends."},
     {"id": 13, "name": "Name Bracelet", "price": 45, "category": "bracelets", "icon": "🔤", "desc": "Bracelet personalised with a name."},
-    {"id": 14, "name": "Gift Combo", "price": 110, "category": "combos", "icon": "🎁", "desc": "Popular items in one useful combo."},
-    {"id": 15, "name": "Lumen Planner", "price": 24, "category": "stationery", "icon": "🗓️", "desc": "Premium weekly planner for students."},
-    {"id": 16, "name": "Halo Notes", "price": 16, "category": "stationery", "icon": "📝", "desc": "Soft-touch notes for focused study."},
+    {"id": 14, "name": "Back-to-School Combo", "price": 85, "category": "combos", "icon": "🎒", "desc": "Pen, pencil, eraser and sharpener in one ready bundle."},
+    {"id": 15, "name": "Study Pack Combo", "price": 95, "category": "combos", "icon": "📚", "desc": "Ruler, highlighter and bookmark for neat study sessions."},
+    {"id": 16, "name": "Gift Ready Combo", "price": 130, "category": "combos", "icon": "🎁", "desc": "Bracelet and keychain paired for a thoughtful gift set."},
+    {"id": 17, "name": "Anime Keychain + Name Bracelet", "price": 155, "category": "combos", "icon": "✨", "desc": "A premium combo featuring an anime keychain and a personalised name bracelet."},
+    {"id": 18, "name": "Custom Keychain + Friendship Bracelet", "price": 140, "category": "combos", "icon": "💝", "desc": "A stylish combo with a customised keychain and a friendship bracelet."},
+    {"id": 19, "name": "Stationery Starter Pack", "price": 75, "category": "combos", "icon": "📝", "desc": "A neat starter set with a pen, pencil and eraser."},
+    {"id": 20, "name": "Desk Essentials Combo", "price": 90, "category": "combos", "icon": "🧰", "desc": "A practical combo featuring a sharpener, ruler and bookmark."},
+    {"id": 21, "name": "Bright Study Combo", "price": 80, "category": "combos", "icon": "🌈", "desc": "A cheerful bundle with a highlighter, bookmark and pen."},
+    {"id": 22, "name": "Personalised Gift Duo", "price": 145, "category": "combos", "icon": "🎀", "desc": "A premium duo with a custom keychain and a name bracelet."},
+    {"id": 23, "name": "Classroom Ready Combo", "price": 100, "category": "combos", "icon": "🏫", "desc": "A complete classroom starter bundle for everyday learning."},
 ]
 
 FILTERS = ["all", "stationery", "keychains", "bracelets", "combos"]
 
 ACCOUNTS = {
-    "ridhaan": {"password": "123456", "name": "ridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, pricing, operations and company growth."},
-    "sahil": {"password": "123456", "name": "Sahil Singh", "role": "CMO", "summary": "Leads promotion, customer communication and brand strategy."},
+    "hridhaan": {"password": "ceo@cc4007", "name": "Hridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, company operations, financial decisions, and overall growth of Class Cart."},
+    "sahil": {"password": "cmo@cc8071", "name": "Sahil Singh", "role": "CMO", "summary": "Leads promotion, customer communication, marketing campaigns, and brand strategy."},
+    "vivaan": {"password": "hoi@cc5160", "name": "Vivaan Chawla", "role": "Head of Inventory", "summary": "Manages inventory, stock levels, product availability, and inventory records."},
 }
 
 
@@ -135,6 +143,40 @@ def register_user(username: str, password: str, name: str, role: str, accounts=N
         "role": display_role,
         "summary": "New team member onboarded to Class Cart.",
     }
+
+
+def get_role_dashboard_config(role: str):
+    role_name = (role or "").strip().lower()
+    configs = {
+        "ceo": {
+            "icon": "👑",
+            "title": "CEO Portal",
+            "subtitle": "Executive overview of growth, sales and operations",
+            "cards": ["Revenue", "Growth", "Attendance", "Team rating"],
+            "highlights": ["Monthly growth", "Forecast health", "Leadership check-ins"],
+        },
+        "cmo": {
+            "icon": "📣",
+            "title": "CMO Portal",
+            "subtitle": "Campaign reach, engagement and brand momentum",
+            "cards": ["Campaign reach", "Engagement", "Attendance", "Brand rating"],
+            "highlights": ["Campaign performance", "Audience sentiment", "Launch planning"],
+        },
+        "head of inventory": {
+            "icon": "📦",
+            "title": "Inventory Portal",
+            "subtitle": "Stock health, replenishment and fulfillment readiness",
+            "cards": ["Inventory rating", "Stock health", "Attendance", "Restock outlook"],
+            "highlights": ["Low-stock alerts", "Warehouse flow", "Supplier updates"],
+        },
+    }
+    return configs.get(role_name, {
+        "icon": "🧑‍💼",
+        "title": "Team Portal",
+        "subtitle": "Personal workspace for your role",
+        "cards": ["Attendance", "Performance", "Updates", "Team rating"],
+        "highlights": ["Daily priorities", "Progress notes", "Next steps"],
+    })
 
 
 def get_theme_css():
@@ -448,35 +490,64 @@ def render_team_login_page():
 def render_leadership_dashboard_page():
     if not st.session_state.get("user"):
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        st.markdown("### Leadership dashboard")
-        st.write("Please sign in from the Team Login page to access the leadership dashboard.")
+        st.markdown("### Team portal")
+        st.write("Please sign in from the Team Login page to access your personalized portal.")
         if st.button("Go to Team Login"):
             set_view("team_login")
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-    st.markdown("### Leadership dashboard")
     account = st.session_state["user"]
-    st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;'><div><strong>{account['name']}</strong><div class='muted'>{account['role']}</div></div><span class='pill'>Active</span></div>", unsafe_allow_html=True)
-    st.write(account["summary"])
+    config = get_role_dashboard_config(account.get("role", ""))
 
-    summary_cols = st.columns(4)
-    summary_cols[0].metric("Products", "16")
-    summary_cols[1].metric("Starting price", "₹5")
-    summary_cols[2].metric("Best combo", "₹110")
-    summary_cols[3].metric("Orders ready", "3")
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown(f"### {config['icon']} {config['title']}")
+    st.write(config["subtitle"])
 
-    action_cols = st.columns(2)
-    with action_cols[0]:
+    header_cols = st.columns([2, 1])
+    with header_cols[0]:
+        st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem;'><div><strong>{account['name']}</strong><div class='muted'>{account['role']}</div></div><span class='pill'>Active</span></div>", unsafe_allow_html=True)
+        st.write(account["summary"])
+    with header_cols[1]:
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        st.markdown("#### Store overview")
-        st.write("Monitor the product range, pricing and featured bundles in one place.")
+        st.markdown("#### Custom rating")
+        st.markdown("⭐️⭐️⭐️⭐️☆")
+        st.write("4.8/5 based on team momentum and delivery quality")
         st.markdown("</div>", unsafe_allow_html=True)
-    with action_cols[1]:
+
+    metrics = st.columns(4)
+    metrics[0].metric("Performance", "94%")
+    metrics[1].metric("Attendance", "96%")
+    metrics[2].metric("Engagement", "4.8/5")
+    metrics[3].metric("Action items", "3")
+
+    analytics_cols = st.columns([1.3, 1])
+    with analytics_cols[0]:
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        st.markdown("#### Team operations")
-        st.write("Keep the team login, onboarding and dashboard access organised for the store.")
+        st.markdown("#### Analytics snapshot")
+        st.write("A quick view of the latest performance signals.")
+        for card in config["cards"]:
+            st.markdown(f"- {card}")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with analytics_cols[1]:
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Attendance & focus")
+        st.progress(0.96)
+        st.caption("Attendance this week")
+        st.write("Daily check-ins are strong and the current focus trend is steady.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    lower_cols = st.columns(2)
+    with lower_cols[0]:
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Highlights")
+        for item in config["highlights"]:
+            st.markdown(f"- {item}")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with lower_cols[1]:
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Team actions")
+        st.write("Review priorities, celebrate momentum, and keep operations moving smoothly.")
         st.markdown("</div>", unsafe_allow_html=True)
 
     button_cols = st.columns(2)
