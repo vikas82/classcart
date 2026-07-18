@@ -367,7 +367,9 @@ def render_team():
         ("HA", "CHIEF EXECUTIVE OFFICER", "Hridhaan Aggrawal", "Leads business planning, pricing, operations and company growth."),
         ("SS", "CHIEF MARKETING OFFICER", "Sahil Singh", "Leads promotion, customer communication and brand strategy."),
         ("VC", "HEAD OF INVENTORY", "Vivaan Chawla", "Manages inventory and stock."),
+        ("HS", "HEAD OF SALES", "To Be Assigned", "Drives sales, partnerships and customer outreach."),
         ("IA", "INVENTORY ASSISTANT", "To Be Assigned", "Supports inventory operations."),
+        ("SA", "SALES ASSISTANT", "To Be Assigned", "Supports sales coordination and order follow-up."),
     ]
 
     for index in range(0, len(team), 2):
