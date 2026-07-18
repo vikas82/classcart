@@ -369,15 +369,18 @@ def render_team():
         ("VC", "HEAD OF INVENTORY", "Vivaan Chawla", "Manages inventory and stock."),
         ("IA", "INVENTORY ASSISTANT", "To Be Assigned", "Supports inventory operations."),
     ]
-    cols = st.columns(2)
-    for col, (avatar, role, name, bio) in zip(cols, team):
-        with col:
-            st.markdown("<div class='team-card'>", unsafe_allow_html=True)
-            st.markdown(f"<div style='width:72px;height:72px;border-radius:50%;background:white;color:black;display:grid;place-items:center;margin:auto;font-size:1.3rem;font-weight:700;'>{avatar}</div>", unsafe_allow_html=True)
-            st.markdown(f"<p class='tiny' style='margin:0.4rem 0 0.1rem;'>{role}</p>", unsafe_allow_html=True)
-            st.markdown(f"<h4 style='margin:0.2rem 0;'>{name}</h4>", unsafe_allow_html=True)
-            st.write(bio)
-            st.markdown("</div>", unsafe_allow_html=True)
+
+    for index in range(0, len(team), 2):
+        row_members = team[index:index + 2]
+        cols = st.columns(2)
+        for col, (avatar, role, name, bio) in zip(cols, row_members):
+            with col:
+                st.markdown("<div class='team-card'>", unsafe_allow_html=True)
+                st.markdown(f"<div style='width:72px;height:72px;border-radius:50%;background:white;color:black;display:grid;place-items:center;margin:auto;font-size:1.3rem;font-weight:700;'>{avatar}</div>", unsafe_allow_html=True)
+                st.markdown(f"<p class='tiny' style='margin:0.4rem 0 0.1rem;'>{role}</p>", unsafe_allow_html=True)
+                st.markdown(f"<h4 style='margin:0.2rem 0;'>{name}</h4>", unsafe_allow_html=True)
+                st.write(bio)
+                st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_auth_page(page_name: str):
