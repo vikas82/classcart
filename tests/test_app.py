@@ -138,6 +138,13 @@ def test_get_todays_attendance_summary_lists_present_leadership(tmp_path, monkey
     assert "vivaan" in summary
 
 
+def test_can_mark_attendance_for_normalized_leadership_roles():
+    assert app.can_mark_attendance_for_role("CEO") is True
+    assert app.can_mark_attendance_for_role("CMO") is True
+    assert app.can_mark_attendance_for_role("Head of Inventory") is True
+    assert app.can_mark_attendance_for_role("Sales") is False
+
+
 def test_shared_theme_css_contains_consistent_ui_classes():
     css = app.get_theme_css()
     assert ".hero-card" in css

@@ -206,6 +206,12 @@ def get_todays_attendance_summary():
         conn.close()
 
 
+def can_mark_attendance_for_role(role: str):
+    role_name = (role or "").strip().lower()
+    normalized_role = role_name.replace("-", " ")
+    return normalized_role in {"ceo", "cmo", "head of inventory", "head of inventory"}
+
+
 def get_role_dashboard_config(role: str):
     role_name = (role or "").strip().lower()
     configs = {
@@ -589,7 +595,7 @@ def render_leadership_dashboard_page():
     metrics[3].metric("Action items", "3")
 
     role_key = (account.get("role") or "").strip().lower()
-    can_mark_attendance = role_key in {"ceo", "cmo", "head of inventory"}
+    can_mark_attendance = can_mark_attendance_for_role(account.get("role", ""))
     if can_mark_attendance:
         attendance_marked_today = get_attendance_status(account.get("username", ""))
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
