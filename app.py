@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -47,6 +48,7 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, summary TEXT NOT NULL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS attendance_logs (username TEXT NOT NULL, attendance_date TEXT NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (username, attendance_date))")
     return conn
 
 
@@ -147,6 +149,61 @@ def register_user(username: str, password: str, name: str, role: str, accounts=N
         "role": display_role,
         "summary": "New team member onboarded to Class Cart.",
     }
+
+
+def mark_attendance(username: str):
+    normalized_username = (username or "").strip().lower()
+    if not normalized_username:
+        return False
+
+    today = date.today().isoformat()
+    conn = get_db_connection()
+    try:
+        existing = conn.execute(
+            "SELECT 1 FROM attendance_logs WHERE username = ? AND attendance_date = ?",
+            (normalized_username, today),
+        ).fetchone()
+        if existing:
+            return False
+
+        conn.execute(
+            "INSERT INTO attendance_logs (username, attendance_date) VALUES (?, ?)",
+            (normalized_username, today),
+        )
+        conn.commit()
+        return True
+    finally:
+        conn.close()
+
+
+def get_attendance_status(username: str):
+    normalized_username = (username or "").strip().lower()
+    if not normalized_username:
+        return False
+
+    today = date.today().isoformat()
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT 1 FROM attendance_logs WHERE username = ? AND attendance_date = ?",
+            (normalized_username, today),
+        ).fetchone()
+        return row is not None
+    finally:
+        conn.close()
+
+
+def get_todays_attendance_summary():
+    today = date.today().isoformat()
+    conn = get_db_connection()
+    try:
+        rows = conn.execute(
+            "SELECT username FROM attendance_logs WHERE attendance_date = ? ORDER BY username",
+            (today,),
+        ).fetchall()
+        return [row["username"] for row in rows]
+    finally:
+        conn.close()
 
 
 def get_role_dashboard_config(role: str):
@@ -531,6 +588,25 @@ def render_leadership_dashboard_page():
     metrics[2].metric("Engagement", "4.8/5")
     metrics[3].metric("Action items", "3")
 
+    role_key = (account.get("role") or "").strip().lower()
+    can_mark_attendance = role_key in {"ceo", "cmo", "head of inventory"}
+    if can_mark_attendance:
+        attendance_marked_today = get_attendance_status(account.get("username", ""))
+        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+        st.markdown("#### Daily attendance")
+        if attendance_marked_today:
+            st.success("Attendance already marked for today.")
+        else:
+            if st.button("Mark present today"):
+                marked = mark_attendance(account.get("username", ""))
+                if marked:
+                    st.success("Attendance marked successfully for today.")
+                    st.rerun()
+                else:
+                    st.info("Attendance was already marked for today.")
+        st.caption("Press the button once each day to confirm your presence in the portal.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
     analytics_cols = st.columns([1.3, 1])
     with analytics_cols[0]:
         st.markdown("<div class='section-card'>", unsafe_allow_html=True)
@@ -545,6 +621,18 @@ def render_leadership_dashboard_page():
         st.progress(0.96)
         st.caption("Attendance this week")
         st.write("Daily check-ins are strong and the current focus trend is steady.")
+        if role_key == "cmo":
+            present_today = get_todays_attendance_summary()
+            present_names = []
+            for username in present_today:
+                if username in ACCOUNTS:
+                    present_names.append(ACCOUNTS[username]["name"])
+            if present_names:
+                st.write("Today’s leadership presence:")
+                for name in present_names:
+                    st.markdown(f"- {name}")
+            else:
+                st.write("No leadership attendance has been marked yet today.")
         st.markdown("</div>", unsafe_allow_html=True)
 
     lower_cols = st.columns(2)

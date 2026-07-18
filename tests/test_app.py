@@ -110,6 +110,34 @@ def test_database_authentication_uses_sqlite():
     assert account["name"] == "Hridhaan Aggrawal"
 
 
+def test_mark_attendance_records_daily_presence_once(tmp_path, monkeypatch):
+    monkeypatch.setattr(app, "DB_PATH", tmp_path / "attendance.db")
+
+    first_mark = app.mark_attendance("hridhaan")
+    second_mark = app.mark_attendance("hridhaan")
+
+    assert first_mark is True
+    assert second_mark is False
+
+    conn = sqlite3.connect(app.DB_PATH)
+    rows = conn.execute("SELECT username, attendance_date FROM attendance_logs WHERE username = ?", ("hridhaan",)).fetchall()
+    conn.close()
+
+    assert len(rows) == 1
+
+
+def test_get_todays_attendance_summary_lists_present_leadership(tmp_path, monkeypatch):
+    monkeypatch.setattr(app, "DB_PATH", tmp_path / "attendance.db")
+
+    app.mark_attendance("hridhaan")
+    app.mark_attendance("vivaan")
+
+    summary = app.get_todays_attendance_summary()
+
+    assert "hridhaan" in summary
+    assert "vivaan" in summary
+
+
 def test_shared_theme_css_contains_consistent_ui_classes():
     css = app.get_theme_css()
     assert ".hero-card" in css
