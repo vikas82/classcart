@@ -53,9 +53,13 @@ def get_db_connection():
 def seed_default_users():
     conn = get_db_connection()
     try:
+        for legacy_username in ["ridhaan"]:
+            conn.execute("DELETE FROM users WHERE username = ?", (legacy_username,))
+
         for username, account in ACCOUNTS.items():
             conn.execute(
-                "INSERT OR IGNORE INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT(username) DO UPDATE SET password = excluded.password, name = excluded.name, role = excluded.role, summary = excluded.summary",
                 (username, account["password"], account["name"], account["role"], account["summary"]),
             )
         conn.commit()

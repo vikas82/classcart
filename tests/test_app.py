@@ -1,3 +1,4 @@
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -70,6 +71,37 @@ def test_role_dashboard_config_contains_role_specific_sections():
     assert "Attendance" in ceo_config["cards"]
     assert inventory_config["icon"] == "📦"
     assert "Inventory rating" in inventory_config["cards"]
+
+
+def test_seed_default_users_refreshes_existing_credentials(tmp_path, monkeypatch):
+    monkeypatch.setattr(app, "DB_PATH", tmp_path / "classcart.db")
+
+    conn = sqlite3.connect(app.DB_PATH)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL, summary TEXT NOT NULL)"
+    )
+    conn.execute(
+        "INSERT INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?)",
+        ("ridhaan", "123456", "Old User", "Old Role", "old summary"),
+    )
+    conn.commit()
+    conn.close()
+
+    app.seed_default_users()
+
+    legacy = sqlite3.connect(app.DB_PATH).execute(
+        "SELECT username FROM users WHERE username = ?",
+        ("ridhaan",),
+    ).fetchone()
+    assert legacy is None
+
+    ceo = sqlite3.connect(app.DB_PATH).execute(
+        "SELECT password, name, role FROM users WHERE username = ?",
+        ("hridhaan",),
+    ).fetchone()
+    assert ceo[0] == "ceo@cc4007"
+    assert ceo[1] == "Hridhaan Aggrawal"
+    assert ceo[2] == "CEO"
 
 
 def test_database_authentication_uses_sqlite():
