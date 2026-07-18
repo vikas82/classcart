@@ -46,6 +46,22 @@ def test_register_user_creates_account():
     assert users["newuser"]["name"] == "New User"
 
 
+def test_register_user_uses_defaults_for_missing_name_or_role():
+    users = {}
+    created = app.register_user("anotheruser", "pass123", "", "", users)
+    assert created is not None
+    assert users["anotheruser"]["name"] == "New User"
+    assert users["anotheruser"]["role"] == "Member"
+
+
+def test_authenticate_user_normalizes_username_and_returns_consistent_payload():
+    users = {"demo": {"password": "secret", "name": "Demo User", "role": "Staff", "summary": "Demo summary"}}
+    account = app.authenticate_user(" DEMO ", "secret", users)
+    assert account is not None
+    assert account["username"] == "demo"
+    assert account["name"] == "Demo User"
+
+
 def test_database_authentication_uses_sqlite():
     account = app.authenticate_user("ridhaan", "123456")
     assert account is not None

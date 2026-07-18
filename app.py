@@ -59,10 +59,12 @@ seed_default_users()
 
 
 def authenticate_user(username: str, password: str, accounts=None):
+    normalized_username = username.strip().lower()
+
     if accounts is None:
         conn = get_db_connection()
         try:
-            row = conn.execute("SELECT username, password, name, role, summary FROM users WHERE username = ?", (username.strip().lower(),)).fetchone()
+            row = conn.execute("SELECT username, password, name, role, summary FROM users WHERE username = ?", (normalized_username,)).fetchone()
             if row and row["password"] == password:
                 return {
                     "username": row["username"],
@@ -74,48 +76,65 @@ def authenticate_user(username: str, password: str, accounts=None):
             return None
         finally:
             conn.close()
-    accounts = ACCOUNTS if accounts is None else accounts
-    account = accounts.get(username.strip().lower())
+
+    account = accounts.get(normalized_username)
     if account and account.get("password") == password:
-        return account
+        return {
+            "username": normalized_username,
+            "password": account.get("password"),
+            "name": account.get("name") or "New User",
+            "role": account.get("role") or "Member",
+            "summary": account.get("summary") or "New team member onboarded to Class Cart.",
+        }
     return None
 
 
 def register_user(username: str, password: str, name: str, role: str, accounts=None):
+    normalized_username = username.strip().lower()
+    if not normalized_username:
+        return None
+
     if accounts is None:
-        normalized_username = username.strip().lower()
-        if not normalized_username:
-            return None
         conn = get_db_connection()
         try:
             existing = conn.execute("SELECT 1 FROM users WHERE username = ?", (normalized_username,)).fetchone()
             if existing:
                 return None
+            display_name = name or "New User"
+            display_role = role or "Member"
             conn.execute(
                 "INSERT INTO users (username, password, name, role, summary) VALUES (?, ?, ?, ?, ?)",
-                (normalized_username, password, name or "New User", role or "Member", "New team member onboarded to Class Cart."),
+                (normalized_username, password, display_name, display_role, "New team member onboarded to Class Cart."),
             )
             conn.commit()
             return {
                 "username": normalized_username,
                 "password": password,
-                "name": name or "New User",
-                "role": role or "Member",
+                "name": display_name,
+                "role": display_role,
                 "summary": "New team member onboarded to Class Cart.",
             }
         finally:
             conn.close()
-    accounts = ACCOUNTS if accounts is None else accounts
-    normalized_username = username.strip().lower()
-    if not normalized_username or normalized_username in accounts:
+
+    if normalized_username in accounts:
         return None
+
+    display_name = name or "New User"
+    display_role = role or "Member"
     accounts[normalized_username] = {
         "password": password,
-        "name": name,
-        "role": role,
+        "name": display_name,
+        "role": display_role,
         "summary": "New team member onboarded to Class Cart.",
     }
-    return accounts[normalized_username]
+    return {
+        "username": normalized_username,
+        "password": password,
+        "name": display_name,
+        "role": display_role,
+        "summary": "New team member onboarded to Class Cart.",
+    }
 
 
 def get_theme_css():
