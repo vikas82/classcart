@@ -22,6 +22,17 @@ def test_filter_products_search():
     assert len(study_results) >= 2
 
 
+def test_pen_variants_are_available_in_catalog_filters():
+    assert "pilot" in app.FILTERS
+    assert "frixon" in app.FILTERS
+    assert "flair" in app.FILTERS
+    assert "move" in app.FILTERS
+
+    pilot_results = app.filter_products("", "pilot")
+    assert len(pilot_results) >= 1
+    assert any(product["name"] == "Pilot V7" for product in pilot_results)
+
+
 def test_cart_total_calculation():
     cart = {1: 2, 2: 1}
     assert app.calculate_cart_total(cart) == 30

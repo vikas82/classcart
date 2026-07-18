@@ -10,7 +10,7 @@ st.set_page_config(page_title="Class Cart", page_icon="📚", layout="wide")
 DB_PATH = Path(__file__).resolve().parent / "classcart.db"
 
 PRODUCTS = [
-    {"id": 1, "name": "Pen", "price": 10, "category": "stationery", "icon": "🖊️", "desc": "Smooth everyday writing pen."},
+    {"id": 1, "name": "Pen", "price": 10, "category": "stationery", "icon": "🖊️", "desc": "Smooth everyday writing pen.", "variants": ["V7", "Pilot", "Frixion", "Flair", "Move", "Gel", "Ballpoint", "Marker", "Calligraphy", "Stylus"]},
     {"id": 2, "name": "Pencil", "price": 10, "category": "stationery", "icon": "✏️", "desc": "Useful for classwork and drawing."},
     {"id": 3, "name": "Eraser", "price": 5, "category": "stationery", "icon": "⬜", "desc": "Clean and easy erasing."},
     {"id": 4, "name": "Sharpener", "price": 5, "category": "stationery", "icon": "🔺", "desc": "Compact school sharpener."},
@@ -33,9 +33,19 @@ PRODUCTS = [
     {"id": 21, "name": "Bright Study Combo", "price": 80, "category": "combos", "icon": "🌈", "desc": "A cheerful bundle with a highlighter, bookmark and pen."},
     {"id": 22, "name": "Personalised Gift Duo", "price": 145, "category": "combos", "icon": "🎀", "desc": "A premium duo with a custom keychain and a name bracelet."},
     {"id": 23, "name": "Classroom Ready Combo", "price": 100, "category": "combos", "icon": "🏫", "desc": "A complete classroom starter bundle for everyday learning."},
+    {"id": 24, "name": "V7 Pen", "price": 35, "category": "v7", "icon": "🖊️", "desc": "A sharp and reliable V7-style pen for class notes.", "variants": ["V7", "Ballpoint"]},
+    {"id": 25, "name": "Pilot V7", "price": 32, "category": "pilot", "icon": "🖊️", "desc": "A premium pilot pen with smooth writing comfort.", "variants": ["Pilot", "Smooth"]},
+    {"id": 26, "name": "Frixion", "price": 40, "category": "frixon", "icon": "✍️", "desc": "An erasable frixion pen that makes corrections easy.", "variants": ["Frixion", "Erasable"]},
+    {"id": 27, "name": "Flair", "price": 45, "category": "flair", "icon": "🖍️", "desc": "A bold flair pen for colorful notes and labels.", "variants": ["Flair", "Marker"]},
+    {"id": 28, "name": "Move", "price": 30, "category": "move", "icon": "🧠", "desc": "A lightweight move pen designed for quick writing.", "variants": ["Move", "Lightweight"]},
+    {"id": 29, "name": "Gel Pen", "price": 28, "category": "gel", "icon": "🖊️", "desc": "A smooth gel pen for clean handwriting.", "variants": ["Gel", "Smooth"]},
+    {"id": 30, "name": "Ballpoint Pen", "price": 25, "category": "ballpoint", "icon": "📝", "desc": "A simple ballpoint pen for everyday use.", "variants": ["Ballpoint", "Daily"]},
+    {"id": 31, "name": "Marker Pen", "price": 38, "category": "marker", "icon": "🖍️", "desc": "A bold marker pen for labels and visible highlighting.", "variants": ["Marker", "Bold"]},
+    {"id": 32, "name": "Calligraphy Pen", "price": 50, "category": "calligraphy", "icon": "✒️", "desc": "An elegant calligraphy pen for art and lettering.", "variants": ["Calligraphy", "Art"]},
+    {"id": 33, "name": "Stylus Pen", "price": 42, "category": "stylus", "icon": "📱", "desc": "A versatile stylus pen for screens and notes.", "variants": ["Stylus", "Multi-use"]},
 ]
 
-FILTERS = ["all", "stationery", "keychains", "bracelets", "combos"]
+FILTERS = ["all", "stationery", "keychains", "bracelets", "combos", "v7", "pilot", "frixon", "flair", "move", "gel", "ballpoint", "marker", "calligraphy", "stylus"]
 
 ACCOUNTS = {
     "hridhaan": {"password": "ceo@cc4007", "name": "Hridhaan Aggrawal", "role": "CEO", "summary": "Leads business planning, company operations, financial decisions, and overall growth of Class Cart."},
@@ -310,6 +320,7 @@ def filter_products(search_term: str, category: str):
     normalized_category = (category or "all").lower()
     filtered = PRODUCTS
     if normalized_category != "all":
+        normalized_category = "frixon" if normalized_category in {"frixion", "frixon"} else normalized_category
         filtered = [product for product in filtered if product["category"] == normalized_category]
     if search_term:
         filtered = [
@@ -418,7 +429,7 @@ def render_hero():
                 st.session_state["show_login"] = True
 
         stats = st.columns(3)
-        stats[0].metric("14", "products")
+        stats[0].metric(str(len(PRODUCTS)), "products")
         stats[1].metric("₹5", "starting price")
         stats[2].metric("2026", "founded")
 
@@ -466,6 +477,8 @@ def render_catalog():
             st.markdown(f"<h4 style='margin:0.4rem 0 0.2rem;'>{product['name']}</h4>", unsafe_allow_html=True)
             st.caption(product["category"].upper())
             st.write(product["desc"])
+            if product.get("variants"):
+                st.markdown(f"<div class='tiny' style='margin:0.4rem 0 0.7rem;'>Variants: {' • '.join(product['variants'])}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='display:flex;justify-content:space-between;align-items:center;margin-top:1rem;'><strong>₹{product['price']}</strong><span class='tiny'>Add to cart</span></div>", unsafe_allow_html=True)
             if st.button("Add", key=f"add_{product['id']}", use_container_width=True):
                 handle_cart_update(product["id"])
